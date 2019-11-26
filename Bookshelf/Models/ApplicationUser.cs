@@ -1,10 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Bookshelf.Models
 {
@@ -31,5 +28,9 @@ namespace Bookshelf.Models
                 return $"{FirstName} {LastName}";
             }
         }
+        // Expression body property below; it's read-only
+        // public string FullName => $"{FirstName} {LastName}";
+
+        public List<Book> Books { get; set; }
     }
 }

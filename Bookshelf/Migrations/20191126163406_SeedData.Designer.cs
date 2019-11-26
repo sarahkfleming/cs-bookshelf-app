@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Bookshelf.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20191125191517_Non-required_OwnerId")]
-    partial class Nonrequired_OwnerId
+    [Migration("20191126163406_SeedData")]
+    partial class SeedData
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -94,6 +94,26 @@ namespace Bookshelf.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "00000000-ffff-ffff-ffff-ffffffffffff",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "a06807db-180a-4e93-a7df-2d02bcb8ad13",
+                            Email = "admin@admin.com",
+                            EmailConfirmed = true,
+                            FirstName = "admin",
+                            LastName = "admin",
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ADMIN@ADMIN.COM",
+                            NormalizedUserName = "ADMIN@ADMIN.COM",
+                            PasswordHash = "AQAAAAEAACcQAAAAENfGa7DZwx4Nr1qZXtBn/eh4RR1hHG6MqfnRcNAVW7mTWXNJrmmreMwbh/QPcF6rYw==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "7f434309-a4d9-48e9-9ebb-8803db794577",
+                            TwoFactorEnabled = false,
+                            UserName = "admin@admin.com"
+                        });
                 });
 
             modelBuilder.Entity("Bookshelf.Models.Author", b =>
@@ -105,8 +125,10 @@ namespace Bookshelf.Migrations
 
                     b.Property<string>("FirstName")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("nvarchar(25)")
-                        .HasMaxLength(25);
+                        .HasMaxLength(25)
+                        .HasDefaultValue("Rufus");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -120,11 +142,24 @@ namespace Bookshelf.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserCreatingId")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UserCreatingId");
+
                     b.ToTable("Authors");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            FirstName = "Herman",
+                            LastName = "Melville",
+                            PreferredGenre = "Whale Allegories",
+                            UserCreatingId = "00000000-ffff-ffff-ffff-ffffffffffff"
+                        });
                 });
 
             modelBuilder.Entity("Bookshelf.Models.Book", b =>
@@ -137,11 +172,16 @@ namespace Bookshelf.Migrations
                     b.Property<int>("AuthorId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Genre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ISBN")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("PublishDate")
@@ -158,6 +198,18 @@ namespace Bookshelf.Migrations
                     b.HasIndex("OwnerId");
 
                     b.ToTable("Books");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            AuthorId = 1,
+                            Genre = "Whale Allegories",
+                            ISBN = "9092939449",
+                            OwnerId = "00000000-ffff-ffff-ffff-ffffffffffff",
+                            PublishDate = new DateTime(1851, 11, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Title = "Moby Dick"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -295,6 +347,15 @@ namespace Bookshelf.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
+            modelBuilder.Entity("Bookshelf.Models.Author", b =>
+                {
+                    b.HasOne("Bookshelf.Models.ApplicationUser", "UserCreating")
+                        .WithMany()
+                        .HasForeignKey("UserCreatingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Bookshelf.Models.Book", b =>
                 {
                     b.HasOne("Bookshelf.Models.Author", "Author")
@@ -304,8 +365,10 @@ namespace Bookshelf.Migrations
                         .IsRequired();
 
                     b.HasOne("Bookshelf.Models.ApplicationUser", "Owner")
-                        .WithMany()
-                        .HasForeignKey("OwnerId");
+                        .WithMany("Books")
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Bookshelf.Models
 {
@@ -38,11 +35,13 @@ namespace Bookshelf.Models
 
         [Display(Name = "Preferred Genre")]
         public string PreferredGenre { get; set; }
+
+        [Display(Name = "Books Written")]
         public List<Book> BooksWritten { get; set; } = new List<Book>();
 
         // ApplicationUser creating the author
+        [Required]
         public string UserCreatingId { get; set; }
-        [NotMapped]
         public ApplicationUser UserCreating { get; set; }
 
     }

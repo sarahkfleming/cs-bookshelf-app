@@ -73,17 +73,12 @@ namespace Bookshelf.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(BookCreateViewModel viewModel)
         {
-            //var user = await _userManager.GetUserAsync(HttpContext.User);
-            //viewModel.Book.OwnerId = user.Id;
 
-            var errors = ModelState
-    .Where(x => x.Value.Errors.Count > 0)
-    .Select(x => new { x.Key, x.Value.Errors })
-    .ToArray();
-
-
+            ModelState.Remove("Book.OwnerId");
             if (ModelState.IsValid)
             {
+                var user = await _userManager.GetUserAsync(HttpContext.User);
+                viewModel.Book.OwnerId = user.Id;
                 _context.Add(viewModel.Book);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));

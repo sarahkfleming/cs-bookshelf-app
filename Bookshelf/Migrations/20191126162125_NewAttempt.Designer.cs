@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Bookshelf.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20191125161249_Initial")]
-    partial class Initial
+    [Migration("20191126162125_NewAttempt")]
+    partial class NewAttempt
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -120,9 +120,12 @@ namespace Bookshelf.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserCreatingId")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserCreatingId");
 
                     b.ToTable("Authors");
                 });
@@ -137,13 +140,17 @@ namespace Bookshelf.Migrations
                     b.Property<int>("AuthorId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Genre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ISBN")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("PublishDate")
                         .HasColumnType("datetime2");
@@ -155,6 +162,8 @@ namespace Bookshelf.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AuthorId");
+
+                    b.HasIndex("OwnerId");
 
                     b.ToTable("Books");
                 });
@@ -294,12 +303,27 @@ namespace Bookshelf.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
+            modelBuilder.Entity("Bookshelf.Models.Author", b =>
+                {
+                    b.HasOne("Bookshelf.Models.ApplicationUser", "UserCreating")
+                        .WithMany()
+                        .HasForeignKey("UserCreatingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Bookshelf.Models.Book", b =>
                 {
-                    b.HasOne("Bookshelf.Models.Author", null)
+                    b.HasOne("Bookshelf.Models.Author", "Author")
                         .WithMany("BooksWritten")
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookshelf.Models.ApplicationUser", "Owner")
+                        .WithMany("Books")
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

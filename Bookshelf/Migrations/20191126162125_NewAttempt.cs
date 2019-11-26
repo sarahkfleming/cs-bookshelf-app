@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Bookshelf.Migrations
 {
-    public partial class Initial : Migration
+    public partial class NewAttempt : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -46,23 +46,6 @@ namespace Bookshelf.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Authors",
-                columns: table => new
-                {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    FirstName = table.Column<string>(maxLength: 25, nullable: false),
-                    LastName = table.Column<string>(maxLength: 35, nullable: false),
-                    PenName = table.Column<string>(nullable: true),
-                    PreferredGenre = table.Column<string>(nullable: true),
-                    UserCreatingId = table.Column<string>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Authors", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -172,6 +155,29 @@ namespace Bookshelf.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Authors",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FirstName = table.Column<string>(maxLength: 25, nullable: false),
+                    LastName = table.Column<string>(maxLength: 35, nullable: false),
+                    PenName = table.Column<string>(nullable: true),
+                    PreferredGenre = table.Column<string>(nullable: true),
+                    UserCreatingId = table.Column<string>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Authors", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Authors_AspNetUsers_UserCreatingId",
+                        column: x => x.UserCreatingId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Books",
                 columns: table => new
                 {
@@ -180,6 +186,7 @@ namespace Bookshelf.Migrations
                     ISBN = table.Column<string>(nullable: false),
                     Title = table.Column<string>(nullable: false),
                     PublishDate = table.Column<DateTime>(nullable: false),
+                    Genre = table.Column<string>(nullable: false),
                     AuthorId = table.Column<int>(nullable: false),
                     OwnerId = table.Column<string>(nullable: false)
                 },
@@ -192,6 +199,12 @@ namespace Bookshelf.Migrations
                         principalTable: "Authors",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Books_AspNetUsers_OwnerId",
+                        column: x => x.OwnerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -234,9 +247,19 @@ namespace Bookshelf.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Authors_UserCreatingId",
+                table: "Authors",
+                column: "UserCreatingId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Books_AuthorId",
                 table: "Books",
                 column: "AuthorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Books_OwnerId",
+                table: "Books",
+                column: "OwnerId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -263,10 +286,10 @@ namespace Bookshelf.Migrations
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "Authors");
 
             migrationBuilder.DropTable(
-                name: "Authors");
+                name: "AspNetUsers");
         }
     }
 }

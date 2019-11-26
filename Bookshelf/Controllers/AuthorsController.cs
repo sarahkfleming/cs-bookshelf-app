@@ -9,6 +9,8 @@ using Bookshelf.Data;
 using Bookshelf.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Data.SqlClient;
 
 namespace Bookshelf.Controllers
 {
@@ -17,11 +19,44 @@ namespace Bookshelf.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IConfiguration _config;
 
-        public AuthorsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        private SqlConnection Connection => new SqlConnection(_config.GetConnectionString("DefaultConnection"));
+
+        public AuthorsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IConfiguration config)
         {
             _context = context;
             _userManager = userManager;
+            _config = config;
+        }
+
+        public async Task<IActionResult> UserAuthorReport()
+        {
+            using var conn = Connection;
+            using var cmd = conn.CreateCommand();
+            conn.Open();
+
+            cmd.CommandText = @"
+                                                SELECT u.FirstName, u.LastName, COUNT(a.Id) AS AuthorCount
+                                                 FROM AspNetUsers u
+                                                LEFT JOIN Authors a ON u.Id = a.UserCreatingId
+                                                GROUP BY u.FirstName, u.LastName";
+
+            var reader = cmd.ExecuteReader();
+
+            List<UserAuthorReportViewModel> report = new List<UserAuthorReportViewModel>();
+            while (reader.Read())
+            {
+                report.Add(new UserAuthorReportViewModel()
+                {
+                    UserFirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                    UserLastName = reader.GetString(reader.GetOrdinal("LastName")),
+                    AuthorCount = reader.GetInt32(reader.GetOrdinal("AuthorCount"))
+                });
+
+            }
+            reader.Close();
+            return View(report);
         }
 
         // GET: Authors
@@ -45,7 +80,7 @@ namespace Bookshelf.Controllers
 
             var author = await _context.Authors
                 //.Include(a => a.UserCreating)
-                //.Include(a => a.BooksWritten)
+                .Include(a => a.BooksWritten)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (author == null)
             {
@@ -114,7 +149,7 @@ namespace Bookshelf.Controllers
                 try
                 {
                     var user = await _userManager.GetUserAsync(HttpContext.User);
-                   author.UserCreatingId = user.Id;
+                    author.UserCreatingId = user.Id;
                     _context.Update(author);
                     await _context.SaveChangesAsync();
                 }
